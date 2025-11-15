@@ -1,0 +1,72 @@
+name: 🚀 CI/CD Pipeline - PetTrack Microservices
+
+on:
+  push:
+    branches: [main]
+
+env:
+  TAG: latest
+  COMMIT_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 🔐 Login a Azure usando Service Principal
+    - name: Azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # 🐳 Login al ACR usando los secrets
+    - name: Docker login to ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    # 🏗️ Build sin caché + tags
+    - name: Build and tag Docker images
+      run: |
+        REGISTRY=${{ secrets.ACR_LOGIN_SERVER }}
+
+        echo "Construyendo imágenes..."
+
+        docker build --no-cache -t $REGISTRY/pettrack-auth-service:${{ env.TAG }} ./services/auth-service
+        docker build --no-cache -t $REGISTRY/pettrack-pets-service:${{ env.TAG }} ./services/pets-service
+        docker build --no-cache -t $REGISTRY/pettrack-appointment-service:${{ env.TAG }} ./services/appointment-service
+        docker build --no-cache -t $REGISTRY/pettrack-rewards-service:${{ env.TAG }} ./services/rewards-service
+        docker build --no-cache -t $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} ./services/postconsult-service
+        docker build --no-cache -t $REGISTRY/pettrack-web-client:${{ env.TAG }} ./clients/web-client
+
+        # Etiquetas adicionales
+        docker tag $REGISTRY/pettrack-auth-service:${{ env.TAG }} $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-pets-service:${{ env.TAG }} $REGISTRY/pettrack-pets-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-appointment-service:${{ env.TAG }} $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-rewards-service:${{ env.TAG }} $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-web-client:${{ env.TAG }} $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
+
+    # 📦 Push
+    - name: Push images to ACR
+      run: |
+        REGISTRY=${{ secrets.ACR_LOGIN_SERVER }}
+
+        docker push $REGISTRY/pettrack-auth-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-pets-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-appointment-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-rewards-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-postconsult-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-web-client:${{ env.TAG }}
+
+        docker push $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-pets-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
