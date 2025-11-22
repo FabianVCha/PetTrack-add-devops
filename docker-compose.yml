@@ -1,100 +1,130 @@
 services:
-  # === AUTH SERVICE ===
   auth-service:
-    build: ./services/auth-service
-    container_name: auth_service
-    env_file:
-      - ./services/auth-service/.env
+    image: ${ACR_LOGIN_SERVER}/pettrack-auth-service:latest
+    container_name: pettrack-auth
     ports:
       - "8000:8000"
-    volumes:
-      - ./services/auth-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
-    restart: always
+    environment:
+      - APP_NAME=auth_service
+      - APP_ENV=production
+      - PORT=8000
+      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_PORT=3306
+      - DB_USER=adminpet
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=vet_auth
+      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
+      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_auth?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    restart: unless-stopped
     networks:
-      - backend
+      - pettrack-network
 
-  # === PETS SERVICE ===
   pets-service:
-    build: ./services/pets-service
-    container_name: pets_service
-    env_file:
-      - ./services/pets-service/.env
+    image: ${ACR_LOGIN_SERVER}/pettrack-pets-service:latest
+    container_name: pettrack-pets
     ports:
-      - "8001:8000"
-    volumes:
-      - ./services/pets-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
-    restart: always
+      - "8001:8001"
+    environment:
+      - APP_NAME=pets_service
+      - APP_ENV=production
+      - PORT=8001
+      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_PORT=3306
+      - DB_USER=adminpet
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=vet_pets
+      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
+      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_pets?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+    restart: unless-stopped
+    depends_on:
+      - auth-service
     networks:
-      - backend
+      - pettrack-network
 
-  # === APPOINTMENTS SERVICE ===
   appointment-service:
-    build: ./services/appointment-service
-    container_name: appointment_service
-    env_file:
-      - ./services/appointment-service/.env
+    image: ${ACR_LOGIN_SERVER}/pettrack-appointment-service:latest
+    container_name: pettrack-appointments
     ports:
-      - "8002:8000"
-    volumes:
-      - ./services/appointment-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
-    restart: always
+      - "8002:8002"
+    environment:
+      - APP_NAME=appointment_service
+      - APP_ENV=production
+      - PORT=8002
+      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_PORT=3306
+      - DB_USER=adminpet
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=vet_appointments
+      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
+      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_appointments?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+    restart: unless-stopped
+    depends_on:
+      - auth-service
     networks:
-      - backend
+      - pettrack-network
 
-  # === REWARDS SERVICE ===
   rewards-service:
-    build: ./services/rewards-service
-    container_name: rewards_service
-    env_file:
-      - ./services/rewards-service/.env
+    image: ${ACR_LOGIN_SERVER}/pettrack-rewards-service:latest
+    container_name: pettrack-rewards
     ports:
-      - "8003:8000"
-    volumes:
-      - ./services/rewards-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
-    restart: always
+      - "8004:8004"
+    environment:
+      - APP_NAME=rewards_service
+      - APP_ENV=production
+      - PORT=8004
+      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_PORT=3306
+      - DB_USER=adminpet
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=vet_rewards
+      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
+      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_rewards?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+    restart: unless-stopped
+    depends_on:
+      - auth-service
     networks:
-      - backend
+      - pettrack-network
 
-  # === POSTCONSULT SERVICE ===
   postconsult-service:
-    build: ./services/postconsult-service
-    container_name: postconsult_service
-    env_file:
-      - ./services/postconsult-service/.env
+    image: ${ACR_LOGIN_SERVER}/pettrack-postconsult-service:latest
+    container_name: pettrack-postconsult
     ports:
-      - "8004:8000"
-    volumes:
-      - ./services/postconsult-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
-    restart: always
+      - "8005:8005"
+    environment:
+      - APP_NAME=postconsult_service
+      - APP_ENV=production
+      - PORT=8005
+      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_PORT=3306
+      - DB_USER=adminpet
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=vet_postconsult
+      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
+      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_postconsult?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+    restart: unless-stopped
+    depends_on:
+      - auth-service
     networks:
-      - backend
+      - pettrack-network
 
-  # === WEB CLIENT ===
-  client:
-    build: ./clients/web-client
-    container_name: web_client
+  web-client:
+    image: ${ACR_LOGIN_SERVER}/pettrack-web-client:latest
+    container_name: pettrack-web
     ports:
       - "80:80"
-    env_file:
-      - ./clients/web-client/.env
-    restart: always
+    environment:
+      - VITE_API_GATEWAY=http://40.65.63.210:8003
+    restart: unless-stopped
+    depends_on:
+      - auth-service
+      - pets-service
+      - appointment-service
     networks:
-      - backend
+      - pettrack-network
 
-# === NETWORKS ===
 networks:
-  backend:
+  pettrack-network:
     driver: bridge
-
-# === VOLUMES ===
-volumes:
-  auth_data:
-  pets_data:
-  appointments_data:
-  rewards_data:
-  postconsult_data:
