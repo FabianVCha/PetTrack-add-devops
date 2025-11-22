@@ -1,4 +1,20 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: pettrack-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "PetTrack2025"
+      MYSQL_DATABASE: pettrack_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - pettrack-network
+    command: --default-authentication-plugin=mysql_native_password
+
   auth-service:
     image: ${ACR_LOGIN_SERVER}/pettrack-auth-service:latest
     container_name: pettrack-auth
@@ -8,17 +24,19 @@ services:
       - APP_NAME=auth_service
       - APP_ENV=production
       - PORT=8000
-      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=adminpet
+      - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=vet_auth
-      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
-      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_auth?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+      - DB_NAME=pettrack_db
+      - DATABASE_URL=mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
       - SECRET_KEY=${SECRET_KEY}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - pettrack-network
 
@@ -31,16 +49,16 @@ services:
       - APP_NAME=pets_service
       - APP_ENV=production
       - PORT=8001
-      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=adminpet
+      - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=vet_pets
-      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
-      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_pets?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+      - DB_NAME=pettrack_db
+      - DATABASE_URL=mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
     restart: unless-stopped
     depends_on:
-      - auth-service
+      mysql:
+        condition: service_healthy
     networks:
       - pettrack-network
 
@@ -53,16 +71,16 @@ services:
       - APP_NAME=appointment_service
       - APP_ENV=production
       - PORT=8002
-      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=adminpet
+      - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=vet_appointments
-      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
-      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_appointments?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+      - DB_NAME=pettrack_db
+      - DATABASE_URL=mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
     restart: unless-stopped
     depends_on:
-      - auth-service
+      mysql:
+        condition: service_healthy
     networks:
       - pettrack-network
 
@@ -75,16 +93,16 @@ services:
       - APP_NAME=rewards_service
       - APP_ENV=production
       - PORT=8004
-      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=adminpet
+      - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=vet_rewards
-      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
-      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_rewards?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+      - DB_NAME=pettrack_db
+      - DATABASE_URL=mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
     restart: unless-stopped
     depends_on:
-      - auth-service
+      mysql:
+        condition: service_healthy
     networks:
       - pettrack-network
 
@@ -97,16 +115,16 @@ services:
       - APP_NAME=postconsult_service
       - APP_ENV=production
       - PORT=8005
-      - DB_HOST=pettrack-mysql.mysql.database.azure.com
+      - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=adminpet
+      - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=vet_postconsult
-      - DB_SSL_CA=/etc/ssl/certs/BaltimoreCyberTrustRoot.pem
-      - DATABASE_URL=mysql+pymysql://adminpet:${DB_PASSWORD}@pettrack-mysql.mysql.database.azure.com:3306/vet_postconsult?ssl_ca=/app/BaltimoreCyberTrustRoot.pem
+      - DB_NAME=pettrack_db
+      - DATABASE_URL=mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
     restart: unless-stopped
     depends_on:
-      - auth-service
+      mysql:
+        condition: service_healthy
     networks:
       - pettrack-network
 
@@ -114,7 +132,7 @@ services:
     image: ${ACR_LOGIN_SERVER}/pettrack-web-client:latest
     container_name: pettrack-web
     ports:
-      - "80:80"
+      - "3000:80"
     environment:
       - VITE_API_GATEWAY=http://40.65.63.210:8003
     restart: unless-stopped
@@ -128,3 +146,7 @@ services:
 networks:
   pettrack-network:
     driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

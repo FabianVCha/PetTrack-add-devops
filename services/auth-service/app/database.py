@@ -3,16 +3,22 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-DB_HOST = os.getenv("DB_HOST")
+DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_NAME = os.getenv("AUTH_DB_NAME")  # cambia por cada microservicio
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 SSL_CA = os.path.join(os.path.dirname(__file__), "../DigiCertGlobalRootG2.pem")
 
-DATABASE_URL = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
-    f"?ssl_ca={SSL_CA}&ssl_verify_cert=true"
-)
+# Para MySQL local (sin SSL)
+if DB_HOST in ["mysql", "localhost", "127.0.0.1"]:
+    DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+else:
+    # Para Azure MySQL (con SSL)
+    SSL_CA = os.path.join(os.path.dirname(__file__), "../DigiCertGlobalRootG2.pem")
+    DATABASE_URL = (
+        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        f"?ssl_ca={SSL_CA}&ssl_verify_cert=true"
+    )
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
