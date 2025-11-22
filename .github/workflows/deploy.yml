@@ -40,10 +40,15 @@ jobs:
     - name: Deploy to VM via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.VM_IP }}
-        username: ${{ secrets.VM_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}     # ← tu clave PRIVADA
-        script: |
-          cd ~/pettrack
-          chmod +x deploy.sh
-          ./deploy.sh
+          host: ${{ secrets.VM_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          debug: true
+          script: |
+            echo "Conexión SSH exitosa"
+            cd /home/fvasquezc/pettrack
+            chmod +x deploy.sh
+            ./deploy.sh
+
