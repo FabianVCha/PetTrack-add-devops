@@ -42,7 +42,7 @@ jobs:
       with:
         host: ${{ secrets.VM_IP }}
         username: ${{ secrets.VM_USER }}
-        key: ${{ secrets.VM_SSH_KEY }}     # ← tu clave PRIVADA
+        key: ${{ secrets.SSH_PRIVATE_KEY }}     # ← tu clave PRIVADA
         script: |
           cd ~/pettrack
           chmod +x deploy.sh
