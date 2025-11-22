@@ -1,8 +1,8 @@
-name: 🚀 CI/CD Pipeline - PetTrack Microservices
+name: CI/CD to VM
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 env:
   TAG: latest
@@ -13,58 +13,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
 
-    # 🐳 Login al ACR
-    - name: Docker login to ACR
+    # 🐳 Login ACR
+    - name: Docker Login to ACR
       run: |
         echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-    # 🏗️ Build sin caché + tags
-    - name: Build and tag Docker images
+    # 🏗️ Build + Tag
+    - name: Build Docker Images
       run: |
         REGISTRY=${{ secrets.ACR_LOGIN_SERVER }}
 
-        echo "Construyendo imágenes..."
+        docker build -t $REGISTRY/pettrack-web-client:${{ env.TAG }} ./clients/web-client
+        docker tag  $REGISTRY/pettrack-web-client:${{ env.TAG }}  $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
 
-        docker build --no-cache -t $REGISTRY/pettrack-auth-service:${{ env.TAG }} ./services/auth-service
-        docker build --no-cache -t $REGISTRY/pettrack-pets-service:${{ env.TAG }} ./services/pets-service
-        docker build --no-cache -t $REGISTRY/pettrack-appointment-service:${{ env.TAG }} ./services/appointment-service
-        docker build --no-cache -t $REGISTRY/pettrack-rewards-service:${{ env.TAG }} ./services/rewards-service
-        docker build --no-cache -t $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} ./services/postconsult-service
-        docker build --no-cache -t $REGISTRY/pettrack-web-client:${{ env.TAG }} ./clients/web-client
-
-        # Etiquetas adicionales
-        docker tag $REGISTRY/pettrack-auth-service:${{ env.TAG }} $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
-        docker tag $REGISTRY/pettrack-pets-service:${{ env.TAG }} $REGISTRY/pettrack-pets-service:${{ env.COMMIT_TAG }}
-        docker tag $REGISTRY/pettrack-appointment-service:${{ env.TAG }} $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
-        docker tag $REGISTRY/pettrack-rewards-service:${{ env.TAG }} $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
-        docker tag $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
-        docker tag $REGISTRY/pettrack-web-client:${{ env.TAG }} $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
-
-    # 📦 Push
-    - name: Push images to ACR
+    # 📤 Push
+    - name: Push Images
       run: |
         REGISTRY=${{ secrets.ACR_LOGIN_SERVER }}
-
-        docker push $REGISTRY/pettrack-auth-service:${{ env.TAG }}
-        docker push $REGISTRY/pettrack-pets-service:${{ env.TAG }}
-        docker push $REGISTRY/pettrack-appointment-service:${{ env.TAG }}
-        docker push $REGISTRY/pettrack-rewards-service:${{ env.TAG }}
-        docker push $REGISTRY/pettrack-postconsult-service:${{ env.TAG }}
         docker push $REGISTRY/pettrack-web-client:${{ env.TAG }}
-
-        docker push $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
-        docker push $REGISTRY/pettrack-pets-service:${{ env.COMMIT_TAG }}
-        docker push $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
-        docker push $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
-        docker push $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
         docker push $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
 
-    # 🚀 Deploy a Azure App Service (Multi-Container)
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v2
+    # 🟢 SSH — Ejecutar deploy en la VM
+    - name: Deploy to VM via SSH
+      uses: appleboy/ssh-action@v1.0.3
       with:
-        app-name: pettrack-app  # Nombre de tu Aplicación Web en Azure
-        configuration-file: './docker-compose.yml'
+        host: ${{ secrets.VM_IP }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}     # ← tu clave PRIVADA
+        script: |
+          cd ~/pettrack
+          chmod +x deploy.sh
+          ./deploy.sh
