@@ -26,14 +26,37 @@ jobs:
       run: |
         REGISTRY=${{ secrets.ACR_LOGIN_SERVER }}
 
+        docker build -t $REGISTRY/pettrack-auth-service:${{ env.TAG }} ./services/auth-service
+        docker build -t $REGISTRY/pettrack-pets-service:${{ env.TAG }} ./services/pets-service
+        docker build -t $REGISTRY/pettrack-appointment-service:${{ env.TAG }} ./services/appointment-service
+        docker build -t $REGISTRY/pettrack-rewards-service:${{ env.TAG }} ./services/rewards-service
+        docker build -t $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} ./services/postconsult-service
         docker build -t $REGISTRY/pettrack-web-client:${{ env.TAG }} ./clients/web-client
-        docker tag  $REGISTRY/pettrack-web-client:${{ env.TAG }}  $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
+
+        docker tag $REGISTRY/pettrack-auth-service:${{ env.TAG }} $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-pets-service:${{ env.TAG }} $REGISTRY/pettrack-pets-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-appointment-service:${{ env.TAG }} $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-rewards-service:${{ env.TAG }} $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-web-client:${{ env.TAG }} $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
 
     # 📤 Push
     - name: Push Images
       run: |
         REGISTRY=${{ secrets.ACR_LOGIN_SERVER }}
+        
+        docker push $REGISTRY/pettrack-auth-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-pets-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-appointment-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-rewards-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-postconsult-service:${{ env.TAG }}
         docker push $REGISTRY/pettrack-web-client:${{ env.TAG }}
+        
+        docker push $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-pets-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
         docker push $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
 
     # 🟢 SSH — Ejecutar deploy en la VM
@@ -47,8 +70,7 @@ jobs:
           script_stop: true
           debug: true
           script: |
-            echo "Conexión SSH exitosa"
+            echo "🚀 Conexión SSH exitosa"
             cd /home/fvasquezc/pettrack
             chmod +x deploy.sh
             ./deploy.sh
-
