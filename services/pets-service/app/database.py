@@ -3,7 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-DB_HOST = os.getenv("DB_HOST")
+DB_HOST = os.getenv("DB_HOST", "")
+DB_HOST = os.getenv("DB_HOST", "")
 DB_NAME = os.getenv("PETS_DB_NAME")  # cambia por cada microservicio
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
