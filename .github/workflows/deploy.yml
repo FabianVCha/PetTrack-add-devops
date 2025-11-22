@@ -68,9 +68,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script_stop: true
-          debug: true
           script: |
-            echo "🚀 Conexión SSH exitosa"
             cd /home/fvasquezc/pettrack
+            echo "ACR_LOGIN_SERVER=${{ secrets.ACR_LOGIN_SERVER }}" > .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
             chmod +x deploy.sh
             ./deploy.sh
