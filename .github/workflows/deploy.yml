@@ -4,10 +4,6 @@ on:
   push:
     branches: [ main ]
 
-env:
-  TAG: latest
-  COMMIT_TAG: ${{ github.sha }}
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
