@@ -16,19 +16,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 🔐 Login a Azure usando Service Principal
-    - name: Azure login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    # 🐳 Login al ACR usando los secrets
+    # 🐳 Login al ACR
     - name: Docker login to ACR
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
+      run: |
+        echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
     # 🏗️ Build sin caché + tags
     - name: Build and tag Docker images
