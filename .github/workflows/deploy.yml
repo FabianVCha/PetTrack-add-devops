@@ -42,6 +42,7 @@ jobs:
         docker build --no-cache -t $REGISTRY/pettrack-appointment-service:${{ env.TAG }} ./services/appointment-service
         docker build --no-cache -t $REGISTRY/pettrack-rewards-service:${{ env.TAG }} ./services/rewards-service
         docker build --no-cache -t $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} ./services/postconsult-service
+        docker build --no-cache -t $REGISTRY/pettrack-api-gateway:${{ env.TAG }} ./services/api-gateway
         docker build --no-cache -t $REGISTRY/pettrack-web-client:${{ env.TAG }} ./clients/web-client
 
         # Etiquetas adicionales
@@ -50,6 +51,7 @@ jobs:
         docker tag $REGISTRY/pettrack-appointment-service:${{ env.TAG }} $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
         docker tag $REGISTRY/pettrack-rewards-service:${{ env.TAG }} $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
         docker tag $REGISTRY/pettrack-postconsult-service:${{ env.TAG }} $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
+        docker tag $REGISTRY/pettrack-api-gateway:${{ env.TAG }} $REGISTRY/pettrack-api-gateway:${{ env.COMMIT_TAG }}
         docker tag $REGISTRY/pettrack-web-client:${{ env.TAG }} $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
 
     # 📦 Push
@@ -62,6 +64,7 @@ jobs:
         docker push $REGISTRY/pettrack-appointment-service:${{ env.TAG }}
         docker push $REGISTRY/pettrack-rewards-service:${{ env.TAG }}
         docker push $REGISTRY/pettrack-postconsult-service:${{ env.TAG }}
+        docker push $REGISTRY/pettrack-api-gateway:${{ env.TAG }}
         docker push $REGISTRY/pettrack-web-client:${{ env.TAG }}
 
         docker push $REGISTRY/pettrack-auth-service:${{ env.COMMIT_TAG }}
@@ -69,4 +72,12 @@ jobs:
         docker push $REGISTRY/pettrack-appointment-service:${{ env.COMMIT_TAG }}
         docker push $REGISTRY/pettrack-rewards-service:${{ env.COMMIT_TAG }}
         docker push $REGISTRY/pettrack-postconsult-service:${{ env.COMMIT_TAG }}
+        docker push $REGISTRY/pettrack-api-gateway:${{ env.COMMIT_TAG }}
         docker push $REGISTRY/pettrack-web-client:${{ env.COMMIT_TAG }}
+
+    # 🚀 Deploy a Azure App Service (Multi-Container)
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: pettrack-app  # Nombre de tu Aplicación Web en Azure
+        configuration-file: './docker-compose.yml'
