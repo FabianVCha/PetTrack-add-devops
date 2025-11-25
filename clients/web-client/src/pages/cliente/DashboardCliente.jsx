@@ -23,7 +23,7 @@ export default function DashboardCliente() {
 
 return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Overlay para móvil */}
+      {/* Overlay para móvil /}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
