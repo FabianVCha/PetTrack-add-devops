@@ -1,19 +1,23 @@
-from pydantic import BaseModel, Field
+from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
-from typing import Optional
+from .database import Base
 
-class Reward(BaseModel):
-    id: Optional[str] = Field(None, alias="_id")
-    title: str
-    desc: str
-    cost: int
-    img: str
+class Reward(Base):
+    __tablename__ = "rewards"
 
-class Redemption(BaseModel):
-    id: Optional[str] = Field(None, alias="_id")
-    user_id: str
-    reward_id: str
-    reward_name: str
-    points: int
-    status: str = "Pendiente"
-    created_at: datetime = datetime.utcnow()
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), nullable=False)
+    desc = Column(String(255), nullable=False)
+    cost = Column(Integer, nullable=False)
+    img = Column(String(255), nullable=True)
+
+class Redemption(Base):
+    __tablename__ = "redemptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(50), nullable=False)
+    reward_id = Column(Integer, nullable=False)
+    reward_name = Column(String(100), nullable=False)
+    points = Column(Integer, nullable=False)
+    status = Column(String(50), default="Pendiente")
+    created_at = Column(DateTime, default=datetime.utcnow)

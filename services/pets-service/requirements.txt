@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-pymysql
+psycopg2-binary   # 👈 reemplaza pymysql
 sqlalchemy
 python-dotenv
 passlib[bcrypt]==1.7.4
@@ -9,4 +9,4 @@ pyjwt
 pydantic[email]
 email-validator
 httpx
-requests   # 👈 Agrega esta línea
+requests

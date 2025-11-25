@@ -1,6 +1,6 @@
 fastapi
 uvicorn
 sqlalchemy
-pymysql
+psycopg2-binary   # 👈 reemplaza pymysql
 python-dotenv
 pydantic
