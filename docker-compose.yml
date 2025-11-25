@@ -1,17 +1,33 @@
 version: "3.9"
 
 services:
+  # === POSTGRES DATABASE ===
+  postgres:
+    image: postgres:18
+    container_name: pettrack_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - backend
+
   # === AUTH SERVICE ===
   auth-service:
     build: ./services/auth-service
     container_name: auth_service
     env_file:
       - ./services/auth-service/.env
+    depends_on:
+      - postgres
     ports:
       - "8000:8000"
     volumes:
       - ./services/auth-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
     restart: always
     networks:
       - backend
@@ -22,11 +38,12 @@ services:
     container_name: pets_service
     env_file:
       - ./services/pets-service/.env
+    depends_on:
+      - postgres
     ports:
       - "8001:8000"
     volumes:
       - ./services/pets-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
     restart: always
     networks:
       - backend
@@ -37,26 +54,12 @@ services:
     container_name: appointment_service
     env_file:
       - ./services/appointment-service/.env
+    depends_on:
+      - postgres
     ports:
       - "8002:8000"
     volumes:
       - ./services/appointment-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
-    restart: always
-    networks:
-      - backend
-
-  # === REWARDS SERVICE ===
-  rewards-service:
-    build: ./services/rewards-service
-    container_name: rewards_service
-    env_file:
-      - ./services/rewards-service/.env
-    ports:
-      - "8004:8000"
-    volumes:
-      - ./services/rewards-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
     restart: always
     networks:
       - backend
@@ -67,11 +70,28 @@ services:
     container_name: postconsult_service
     env_file:
       - ./services/postconsult-service/.env
+    depends_on:
+      - postgres
     ports:
       - "8005:8000"
     volumes:
       - ./services/postconsult-service:/app
-      # Eliminamos el certificado porque ya no se usa
+    restart: always
+    networks:
+      - backend
+
+  # === REWARDS SERVICE ===
+  rewards-service:
+    build: ./services/rewards-service
+    container_name: rewards_service
+    env_file:
+      - ./services/rewards-service/.env
+    depends_on:
+      - postgres
+    ports:
+      - "8004:8000"
+    volumes:
+      - ./services/rewards-service:/app
     restart: always
     networks:
       - backend
@@ -121,8 +141,4 @@ networks:
 
 # === VOLUMES ===
 volumes:
-  auth_data:
-  pets_data:
-  appointments_data:
-  rewards_data:
-  postconsult_data:
+  postgres_data:
