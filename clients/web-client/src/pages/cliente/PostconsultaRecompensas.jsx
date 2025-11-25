@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../css/postconsulta-recompensas.css";
+import "../../css/postconsulta-recompensas.css";
 
 const PostconsultaRecompensas = () => {
   const navigate = useNavigate();
@@ -67,17 +67,17 @@ const PostconsultaRecompensas = () => {
   };
 
   const handleSaveNewFollow = () => {
-    const { pet, owner, type, date, time } = newFollow;
-    if (!pet || !owner || !type || !date || !time) {
+    const { pet: petName, owner: ownerName, type: followType, date: followDate, time: followTime } = newFollow;
+    if (!petName || !ownerName || !followType || !followDate || !followTime) {
       alert("Por favor, completa todos los campos.");
       return;
     }
     const newItem = {
       id: Date.now(),
-      pet: ${pet} — ${owner},
-      type,
-      date,
-      time,
+      pet: `${petName} — ${ownerName}`,
+      type: followType,
+      date: followDate,
+      time: followTime,
       status: "Pendiente",
       notes: "Nuevo seguimiento",
       pointsOnComplete: 50
@@ -100,7 +100,7 @@ const PostconsultaRecompensas = () => {
     }
     setFollowData(followData.map(f =>
       f.id === selectedFollow.id
-        ? { ...f, notes: ⭐ ${rating} estrellas — ${comment || "Sin comentario"} }
+        ? { ...f, notes: `⭐ ${rating} estrellas — ${comment || "Sin comentario"}` }
         : f
     ));
     setShowSurveyModal(false);

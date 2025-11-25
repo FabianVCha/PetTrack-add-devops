@@ -41,9 +41,8 @@ export default function DashboardCliente() {
                 {/* 🔹 Botón para ir a la vista de recompensas */}
         <div className="mb-6">
           <button
-            onClick={() => navigate("/user/rewards")}
-            className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md transition-all"
-          >
+           onClick={() => navigate("/user/postconsulta-recompensas")}
+            className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md transition-all">
             Post-Consulta
           </button>
         </div>
