@@ -1,186 +1,128 @@
 version: "3.9"
 
 services:
-  # === DATABASE ===
-  mysql:
-    image: mysql:8.0
-    container_name: pettrack-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: pettrack_db
-      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - pettrack-network
-    command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   # === AUTH SERVICE ===
   auth-service:
-    image: ${ACR_LOGIN_SERVER}/pettrack-auth-service:latest
-    container_name: pettrack-auth
-    restart: unless-stopped
+    build: ./services/auth-service
+    container_name: auth_service
+    env_file:
+      - ./services/auth-service/.env
     ports:
       - "8000:8000"
-    environment:
-      APP_NAME: auth_service
-      APP_ENV: production
-      PORT: 8000
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: pettrack_db
-      DATABASE_URL: mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-    depends_on:
-      mysql:
-        condition: service_healthy
+    volumes:
+      - ./services/auth-service:/app
+      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
   # === PETS SERVICE ===
   pets-service:
-    image: ${ACR_LOGIN_SERVER}/pettrack-pets-service:latest
-    container_name: pettrack-pets
-    restart: unless-stopped
+    build: ./services/pets-service
+    container_name: pets_service
+    env_file:
+      - ./services/pets-service/.env
     ports:
-      - "8001:8001"
-    environment:
-      APP_NAME: pets_service
-      APP_ENV: production
-      PORT: 8001
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: pettrack_db
-      DATABASE_URL: mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
-    depends_on:
-      mysql:
-        condition: service_healthy
+      - "8001:8000"
+    volumes:
+      - ./services/pets-service:/app
+      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
-  # === APPOINTMENT SERVICE ===
+  # === APPOINTMENTS SERVICE ===
   appointment-service:
-    image: ${ACR_LOGIN_SERVER}/pettrack-appointment-service:latest
-    container_name: pettrack-appointments
-    restart: unless-stopped
+    build: ./services/appointment-service
+    container_name: appointment_service
+    env_file:
+      - ./services/appointment-service/.env
     ports:
-      - "8002:8002"
-    environment:
-      APP_NAME: appointment_service
-      APP_ENV: production
-      PORT: 8002
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: pettrack_db
-      DATABASE_URL: mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
-    depends_on:
-      mysql:
-        condition: service_healthy
+      - "8002:8000"
+    volumes:
+      - ./services/appointment-service:/app
+      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
   # === REWARDS SERVICE ===
   rewards-service:
-    image: ${ACR_LOGIN_SERVER}/pettrack-rewards-service:latest
-    container_name: pettrack-rewards
-    restart: unless-stopped
+    build: ./services/rewards-service
+    container_name: rewards_service
+    env_file:
+      - ./services/rewards-service/.env
     ports:
-      - "8004:8004"
-    environment:
-      APP_NAME: rewards_service
-      APP_ENV: production
-      PORT: 8004
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: pettrack_db
-      DATABASE_URL: mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
-    depends_on:
-      mysql:
-        condition: service_healthy
+      - "8004:8000"
+    volumes:
+      - ./services/rewards-service:/app
+      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
   # === POSTCONSULT SERVICE ===
   postconsult-service:
-    image: ${ACR_LOGIN_SERVER}/pettrack-postconsult-service:latest
-    container_name: pettrack-postconsult
-    restart: unless-stopped
+    build: ./services/postconsult-service
+    container_name: postconsult_service
+    env_file:
+      - ./services/postconsult-service/.env
     ports:
-      - "8005:8005"
-    environment:
-      APP_NAME: postconsult_service
-      APP_ENV: production
-      PORT: 8005
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: pettrack_db
-      DATABASE_URL: mysql+pymysql://root:${DB_PASSWORD}@mysql:3306/pettrack_db
-    depends_on:
-      mysql:
-        condition: service_healthy
+      - "8005:8000"
+    volumes:
+      - ./services/postconsult-service:/app
+      # Eliminamos el certificado porque ya no se usa
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
   # === API GATEWAY ===
   api-gateway:
-    image: ${ACR_LOGIN_SERVER}/pettrack-api-gateway:latest
-    container_name: pettrack-api-gateway
-    restart: unless-stopped
+    build: ./services/api-gateway
+    container_name: api_gateway
     ports:
       - "8003:8003"
+    env_file:
+      - ./services/api-gateway/.env
     environment:
       AUTH_SERVICE_URL: "http://auth-service:8000"
-      PETS_SERVICE_URL: "http://pets-service:8001"
-      APPOINTMENTS_SERVICE_URL: "http://appointment-service:8002"
-      REWARDS_SERVICE_URL: "http://rewards-service:8004"
-      POSTCONSULT_SERVICE_URL: "http://postconsult-service:8005"
+      PETS_SERVICE_URL: "http://pets-service:8000"
+      APPOINTMENTS_SERVICE_URL: "http://appointment-service:8000"
+      REWARDS_SERVICE_URL: "http://rewards-service:8000"
+      POSTCONSULT_SERVICE_URL: "http://postconsult-service:8000"
     depends_on:
       - auth-service
       - pets-service
       - appointment-service
       - rewards-service
       - postconsult-service
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
   # === WEB CLIENT ===
-  web-client:
-    image: ${ACR_LOGIN_SERVER}/pettrack-web-client:latest
-    container_name: pettrack-web
-    restart: unless-stopped
+  client:
+    build: ./clients/web-client
+    container_name: web_client
     ports:
       - "80:80"
-    environment:
-      VITE_API_GATEWAY: "http://api-gateway:8003"
     depends_on:
       - api-gateway
+    environment:
+      VITE_API_GATEWAY: "http://api-gateway:8003"
+    restart: always
     networks:
-      - pettrack-network
+      - backend
 
+# === NETWORKS ===
 networks:
-  pettrack-network:
+  backend:
     driver: bridge
 
+# === VOLUMES ===
 volumes:
-  mysql_data:
-    driver: local
+  auth_data:
+  pets_data:
+  appointments_data:
+  rewards_data:
+  postconsult_data:
