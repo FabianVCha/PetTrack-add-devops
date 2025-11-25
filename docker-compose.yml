@@ -71,7 +71,7 @@ services:
       - "8005:8000"
     volumes:
       - ./services/postconsult-service:/app
-      - ./certs/BaltimoreCyberTrustRoot.pem:/etc/ssl/certs/BaltimoreCyberTrustRoot.pem:ro
+      # Eliminamos el certificado porque ya no se usa
     restart: always
     networks:
       - backend
