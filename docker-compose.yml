@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  # === POSTGRES DATABASE ===
+  # === POSTGRES DATABASE ====
   postgres:
     image: postgres:18
     container_name: pettrack_postgres
