@@ -2,9 +2,62 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../css/recompensas.css"; // ✅ reutilizamos el mismo estilo moderno
 
+const SAMPLE_REWARDS = [
+  {
+    id: "r1",
+    title: "Tarjeta regalo $10",
+    desc: "Vale canjeable en tienda de mascotas",
+    cost: 250,
+    img: "/Cupon.png",
+  },
+  {
+    id: "r2",
+    title: "Cita veterinaria gratuita",
+    desc: "Consulta general sin coste",
+    cost: 800,
+    img: "/Tarjeta.png",
+  },
+  {
+    id: "r3",
+    title: "Paseo de mascota (1 hora)",
+    desc: "Paseo con profesional",
+    cost: 450,
+    img: "/Paseo.png",
+  },
+  {
+    id: "r4",
+    title: "Pack de premios",
+    desc: "Surtido de snacks para tu mascota",
+    cost: 1200,
+    img: "/regalos.png",
+  },
+  {
+    id: "r5",
+    title: "Cepillado profesional",
+    desc: "Sesión de grooming básico",
+    cost: 600,
+    img: "/corte.png",
+  },
+];
+
+const SAMPLE_HISTORIAL = [
+  {
+    created_at: "2025-11-15T10:30:00Z",
+    reward_name: "Tarjeta regalo $10",
+    points: 250,
+    status: "completado",
+  },
+  {
+    created_at: "2025-10-20T14:00:00Z",
+    reward_name: "Paseo de mascota (1 hora)",
+    points: 450,
+    status: "pendiente",
+  },
+];
+
 export default function RewardsUsers() {
-  const [rewards, setRewards] = useState([]);
-  const [historial, setHistorial] = useState([]);
+  const [rewards, setRewards] = useState(SAMPLE_REWARDS);
+  const [historial, setHistorial] = useState(SAMPLE_HISTORIAL);
   const [filter, setFilter] = useState("all");
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const userId = "user123"; // 🔹 luego reemplázalo con el usuario autenticado
@@ -14,7 +67,9 @@ export default function RewardsUsers() {
     axios
       .get("http://localhost:8004/rewards")
       .then((res) => setRewards(res.data))
-      .catch((err) => console.error("Error al obtener recompensas:", err));
+      .catch((err) => {
+        console.warn("Backend rewards no disponible, usando datos de ejemplo.");
+      });
   }, []);
 
   // 📜 Obtener historial de canjes
@@ -23,7 +78,9 @@ export default function RewardsUsers() {
       axios
         .get(`http://localhost:8004/redemptions/${userId}`)
         .then((res) => setHistorial(res.data))
-        .catch((err) => console.error("Error al obtener historial:", err));
+        .catch((err) => {
+          console.warn("Backend redemptions no disponible, mostrando historial de ejemplo.");
+        });
     }
   }, [mostrarHistorial]);
 
@@ -93,13 +150,6 @@ export default function RewardsUsers() {
                 {f === "high" && "Más de 1000 pts"}
               </div>
             ))}
-
-            <button
-              className="btn secondary"
-              onClick={() => setMostrarHistorial(!mostrarHistorial)}
-            >
-              {mostrarHistorial ? "Ocultar historial" : "Ver historial"}
-            </button>
           </div>
 
           {/* 🏆 Grid de recompensas */}
