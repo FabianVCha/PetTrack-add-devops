@@ -32,17 +32,25 @@ jobs:
           ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
             cd ~/pettrack
             
-            # Verificar que exista docker-compose.yml
-            if [ ! -f docker-compose.yml ]; then
-              echo "ERROR: docker-compose.yml not found!"
-              exit 1
-            fi
+            # Crear archivos .env si no existen
+            for service in auth-service appointment-service postconsult-service pets-service rewards-service; do
+              mkdir -p services/$service
+              if [ ! -f services/$service/.env ]; then
+                touch services/$service/.env
+              fi
+            done
             
-            # Deploy
-            docker compose pull || true
+            # Deploy con output más verboso
+            echo "🔨 Building and starting services..."
             docker compose down
-            docker compose up -d --build
+            docker compose build --no-cache  # Construye las imágenes
+            docker compose up -d             # Levanta los contenedores
+            
+            echo "🧹 Cleaning up..."
             docker system prune -f
+            
+            echo "📊 Services status:"
+            docker compose ps
             
             echo "✅ Deployment completed successfully"
           ENDSSH
