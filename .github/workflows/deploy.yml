@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,36 +22,37 @@ jobs:
       - name: Copy files to VM
         run: |
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/id_rsa" \
+            -e "ssh -i ~/.ssh/id_rsa -o ServerAliveInterval=60" \
             --exclude='.git' \
             --exclude='node_modules' \
+            --exclude='__pycache__' \
             --exclude='.env' \
+            --exclude='*.pyc' \
             ./ ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:~/pettrack/
       
-      - name: Deploy with Docker
+      - name: Trigger deployment on VM
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'ENDSSH'
+          ssh -i ~/.ssh/id_rsa \
+            -o ServerAliveInterval=60 \
+            -o ServerAliveCountMax=120 \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            'bash -s' << 'ENDSSH'
             cd ~/pettrack
             
-            # Crear archivos .env si no existen
+            # Crear .env files
             for service in auth-service appointment-service postconsult-service pets-service rewards-service; do
               mkdir -p services/$service
-              if [ ! -f services/$service/.env ]; then
-                touch services/$service/.env
-              fi
+              [ ! -f services/$service/.env ] && touch services/$service/.env
             done
             
-            # Deploy con output más verboso
-            echo "🔨 Building and starting services..."
-            docker compose down
-            docker compose build --no-cache  # Construye las imágenes
-            docker compose up -d             # Levanta los contenedores
+            # Build en background para evitar timeout
+            nohup bash -c '
+              docker compose down
+              docker compose build --no-cache
+              docker compose up -d
+              docker system prune -f
+            ' > ~/deploy.log 2>&1 &
             
-            echo "🧹 Cleaning up..."
-            docker system prune -f
-            
-            echo "📊 Services status:"
-            docker compose ps
-            
-            echo "✅ Deployment completed successfully"
+            echo "✅ Deployment started in background"
+            echo "📝 Check logs with: tail -f ~/deploy.log"
           ENDSSH
