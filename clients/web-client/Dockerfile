@@ -11,7 +11,8 @@ RUN npm ci --silent
 
 # Copiar el resto del código
 COPY . .
-
+# opción: instalar vite globalmente para evitar "vite: not found"
+RUN npm install -g vite@latest
 # Compilar el proyecto para producción
 RUN npm run build
 
