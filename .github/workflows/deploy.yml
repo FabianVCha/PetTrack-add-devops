@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45  # Aumenta a 45 minutos
     
     steps:
       - name: Checkout code
@@ -20,13 +20,11 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_PRIVATE_KEY }}
-          timeout: 30m
-          command_timeout: 30m
+          timeout: 45m
+          command_timeout: 45m
           script: |
-            # Navegar al directorio
             cd ~
             
-            # Clonar o actualizar repositorio
             if [ -d "pettrack/.git" ]; then
               cd pettrack
               git pull origin main
@@ -35,22 +33,23 @@ jobs:
               cd pettrack
             fi
             
-            # Crear archivos .env si no existen
+            # Crear .env files
             for service in auth-service appointment-service postconsult-service pets-service rewards-service; do
               mkdir -p services/$service
-              if [ ! -f services/$service/.env ]; then
-                touch services/$service/.env
-                echo "Created .env for $service"
-              fi
+              [ ! -f services/$service/.env ] && touch services/$service/.env
             done
             
-            # Build y deploy
-            echo "Building and deploying services..."
+            echo "🔄 Updating services..."
             docker compose down || true
-            docker compose build --no-cache
+            
+            # Build SIN --no-cache para usar cache
+            docker compose build
+            
+            echo "🚀 Starting services..."
             docker compose up -d
+            
+            echo "🧹 Cleaning up..."
             docker system prune -f
             
-            # Mostrar estado
-            echo "Deployment completed!"
+            echo "✅ Deployment completed!"
             docker compose ps
