@@ -10,6 +10,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Debug Secrets
+        run: |
+          echo "VM_HOST length: ${#VM_HOST}"
+          echo "VM_USER length: ${#VM_USER}"
+          echo "VM_KEY length: ${#VM_PRIVATE_KEY}"
+        env:
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+          VM_PRIVATE_KEY: ${{ secrets.VM_PRIVATE_KEY }}
       
       - name: Setup SSH
         run: |
