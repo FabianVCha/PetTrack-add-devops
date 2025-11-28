@@ -79,7 +79,7 @@ const PostconsultaRecompensas = () => {
       date: followDate,
       time: followTime,
       status: "Pendiente",
-      notes: "Nuevo seguimiento",
+      notes: "Nueva cita",
       pointsOnComplete: 50
     };
     setFollowData([...followData, newItem]);
@@ -130,7 +130,7 @@ const PostconsultaRecompensas = () => {
             value={searchTerm}
             onChange={handleSearchChange}
           />
-          <button className="btn small" onClick={handleOpenNewFollow}>+ Nuevo seguimiento</button>
+          <button className="btn small" onClick={handleOpenNewFollow}>+ Nueva cita</button>
           <button className="btn secondary small" onClick={handleFilter}>Filtrar</button>
         </div>
 

@@ -12,7 +12,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      # 🔹 En Postgres 18, los datos van directamente en /var/lib/postgresql
       - postgres_data:/var/lib/postgresql
+      # 🔹 Script SQL que crea las bases y tablas
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - backend
 

@@ -5,12 +5,36 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
 from typing import List
+import time
+import psycopg2
+import os
 
+# Esperar a que PostgreSQL esté disponible antes de continuar
+for i in range(10):
+    try:
+        conn = psycopg2.connect(
+            dbname=os.getenv("DB_NAME", "vet_auth"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD", "postgres"),
+            host=os.getenv("DB_HOST", "postgres"),
+            port=os.getenv("DB_PORT", "5432"),
+        )
+        conn.close()
+        print("✅ PostgreSQL está disponible, continuando con el arranque del servicio Auth...")
+        break
+    except psycopg2.OperationalError:
+        print(f"⏳ Intento {i+1}/10: esperando a que PostgreSQL esté disponible...")
+        time.sleep(3)
+else:
+    raise Exception("❌ No se pudo conectar con PostgreSQL después de varios intentos.")
+
+# ---------------------------------------------------------------
 from . import models, schemas
 from .database import Base, engine, get_db
 from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="Auth Service")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
@@ -51,10 +75,10 @@ def role_required(allowed_roles: List[str]):
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(status_code=400, detail="El email ya está en uso")
-    
+   
     if user.role not in ["user", "doctor", "admin"]:
         raise HTTPException(status_code=400, detail="Rol no válido")
-    
+   
     if len(user.password) > 72:
         raise HTTPException(status_code=400, detail="La contraseña no puede superar 72 caracteres")
 
@@ -97,29 +121,23 @@ def list_users(current_user: models.User = Depends(role_required(["admin", "doct
     users = db.query(models.User).all()
     return users
 
-# ======================================
-# 🔹 Nuevo endpoint para dashboard por rol
-# ======================================
 @app.get("/dashboard/{role}")
 def dashboard(role: str, current_user: models.User = Depends(get_current_user)):
     if role == "admin":
         if current_user.role != "admin":
             raise HTTPException(status_code=403, detail="Acceso restringido a administradores")
         return {"message": f"Bienvenido al dashboard de administrador, {current_user.username}"}
-    
+   
     elif role == "doctor":
         if current_user.role != "doctor":
             raise HTTPException(status_code=403, detail="Acceso restringido a doctores")
         return {"message": f"Bienvenido al dashboard de doctor, {current_user.username}"}
-    
+   
     elif role == "user":
         if current_user.role != "user":
             raise HTTPException(status_code=403, detail="Acceso denegado a este recurso")
         return {"message": f"Bienvenido al dashboard de usuario, {current_user.username}"}
-    
-# ============================================================
-# 🔹 Eliminar usuario (solo admin)
-# ============================================================
+
 @app.delete("/users/{user_id}", status_code=204)
 def delete_user(
     user_id: int,
@@ -134,14 +152,10 @@ def delete_user(
     db.commit()
     return {"message": f"Usuario con ID {user_id} eliminado correctamente"}
 
-
-# ============================================================
-# 🔹 Editar usuario (solo admin)
-# ============================================================
 @app.put("/users/{user_id}", response_model=schemas.UserResponse)
 def update_user(
     user_id: int,
-    updated_data: schemas.UserUpdate,  # debes crear este esquema en schemas.py
+    updated_data: schemas.UserUpdate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(role_required(["admin"]))
 ):
@@ -149,7 +163,6 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    # Actualizar campos básicos (solo si vienen en la solicitud)
     if updated_data.username:
         user.username = updated_data.username
     if updated_data.email:
